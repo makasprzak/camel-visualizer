@@ -17,6 +17,11 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-test</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.makasprzak.camel-visualizer</groupId>
+            <artifactId>camel-visualizer</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

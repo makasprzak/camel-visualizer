@@ -1,0 +1,22 @@
+@startuml
+
+"direct:startA" --> "direct:middle"
+
+"direct:startB" --> "direct:middle"
+--> if "header{propertyA} == firstValue" then
+  -->[true] "direct:endA"
+else
+  -->[false] if "header{propertyA} == secondValue} then
+  -->[true] "direct:endB"
+else
+  -->[false] "direct:endC"
+endif
+
+"direct:endB" --> if "header{propertyB} > 3" then
+  -->[true] "direct:middle2"
+  --> "direct:endC"
+else
+  -->[false] "STOP"
+endif
+
+@enduml
