@@ -39,6 +39,10 @@ public class ExampleCamelApp extends RouteBuilder {
 
     public static void main(String[] args) throws Exception {
         CamelContext camelContext = new ExampleCamelApp().buildContext();
-        ((ModelCamelContext)camelContext).getRouteDefinitions().forEach(route -> LOG.info(route.toString()));
+        ((ModelCamelContext)camelContext).getRouteDefinitions().forEach(route -> {
+            LOG.info(route.toString());
+            route.getInputs().forEach(in -> System.out.println("Input: "+in.getUri()));
+            route.getOutputs().forEach(out -> System.out.println("Out: "+out.getClass()));
+        });
     }
 }
