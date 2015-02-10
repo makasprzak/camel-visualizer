@@ -8,17 +8,18 @@ import org.junit.Test;
 import java.util.List;
 
 import static com.makasprzak.camel.visualizer.model.Activity.activity;
+import static com.makasprzak.camel.visualizer.model.Condition.Builder.condition;
 import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 
-public class LinksReductorTest {
+public class LinksReducerTest {
 
-    private final LinksReductor linksReductor = new LinksReductor();
+    private final LinksReducer linksReducer = new LinksReducer();
 
     @Test
     public void shouldGroupTwoSerialLinksInOne() throws Exception {
         assertThat(
-                linksReductor.groupLinks(ImmutableSet.of(
+                linksReducer.groupLinks(ImmutableSet.of(
                         link("direct:a","direct:b"),
                         link("direct:b","direct:c")
                 ))
@@ -32,7 +33,7 @@ public class LinksReductorTest {
     @Test
     public void shouldGroupBranchToTwo() throws Exception {
         assertThat(
-                linksReductor.groupLinks(ImmutableSet.of(
+                linksReducer.groupLinks(ImmutableSet.of(
                         link("direct:a","direct:b"),
                         link("direct:b", "direct:c"),
                         link("direct:b", "direct:d")
@@ -50,6 +51,42 @@ public class LinksReductorTest {
                         ));
             }
         });
+
+    }
+
+    @Test
+    public void shouldTerminateGroupOnCondition() throws Exception {
+        assertThat(
+                linksReducer.groupLinks(ImmutableSet.of(
+                        Link.Builder.link()
+                                .withSource(activity("a"))
+                                .withTarget(
+                                        condition()
+                                                .withWhenTrue(activity("ab"))
+                                                .withWhenFalse(activity("ac"))
+                                                .withExpression("a == b")
+                                                .build()
+                                )
+                                .build(),
+                        link("b", "d"),
+                        link("c", "d")
+
+                ))
+        ).containsExactly(
+                asList(Link.Builder.link()
+                        .withSource(activity("a"))
+                        .withTarget(
+                                condition()
+                                        .withWhenTrue(activity("ab"))
+                                        .withWhenFalse(activity("ac"))
+                                        .withExpression("a == b")
+                                        .build()
+                        )
+                        .build()),
+                asList(link("b", "d")),
+                asList(link("c", "d"))
+
+        );
 
     }
 

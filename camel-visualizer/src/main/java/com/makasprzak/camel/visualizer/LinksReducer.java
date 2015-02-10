@@ -19,7 +19,7 @@ import static com.google.common.collect.Multimaps.filterKeys;
 import static com.google.common.collect.Multimaps.index;
 import static com.google.common.collect.Sets.newHashSet;
 
-public class LinksReductor {
+public class LinksReducer {
     public List<List<Link>> groupLinks(Set<Link> links) {
         Set<Link> linksLeft = newHashSet(links);
         List<List<Link>> groupedLinks = newLinkedList();
