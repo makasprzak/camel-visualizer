@@ -192,8 +192,73 @@ public class CamelModelMapperTest {
         );
     }
 
-//TODO multiple whens
-    //TODO filters
+    @Test
+    public void shouldMapRouteWithChoiceThatHasMultipleWhenClausesToMultipleConditions() throws Exception {
+        assertThat(
+                mapper.map(
+                        route(
+                                asList(
+                                        from("direct:in")
+                                ),
+                                Arrays.<ProcessorDefinition<?>>asList(
+                                        choice(otherwise(to("direct:otherwise")), when("a == b",to("direct:when1")), when("a > b",to("direct:when2")))
+                                )
+                        )
+                )
+        ).containsOnly(
+                link()
+                        .withSource(activity("direct:in"))
+                        .withTarget(
+                                condition()
+                                        .withWhenTrue(activity("direct:when1"))
+                                        .withWhenFalse(
+                                                condition()
+                                                .withWhenTrue(activity("direct:when2"))
+                                                .withWhenFalse(activity("direct:otherwise"))
+                                                .withExpression("a > b")
+                                                .build()
+                                        )
+                                        .withExpression("a == b")
+                                        .build()
+                        )
+                        .build()
+
+        );
+    }
+
+    @Test
+    public void shouldMapRouteWithFilterToACondition() throws Exception {
+        assertThat(
+                mapper.map(
+                        route(
+                                asList(
+                                        from("direct:in")
+                                ),
+                                Arrays.<ProcessorDefinition<?>>asList(
+                                        filter("a == b", Arrays.<ProcessorDefinition<?>>asList(to("direct:out")))
+                                )
+                        )
+                )
+        ).containsOnly(
+                link()
+                        .withSource(activity("direct:in"))
+                        .withTarget(
+                                condition()
+                                        .withWhenTrue(activity("direct:out"))
+                                        .withWhenFalse(activity("STOP"))
+                                        .withExpression("a == b")
+                                        .build()
+                        )
+                        .build()
+
+        );
+    }
+
+    private FilterDefinition filter(String expression, List<ProcessorDefinition<?>> outputs) {
+        FilterDefinition filterDefinition = new FilterDefinition(new ExpressionDefinition(expression));
+        filterDefinition.setOutputs(outputs);
+        return filterDefinition;
+    }
 
     private FromDefinition from(String uri) {
         return new FromDefinition(uri);

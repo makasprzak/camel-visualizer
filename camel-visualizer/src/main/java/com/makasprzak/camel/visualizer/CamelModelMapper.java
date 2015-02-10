@@ -36,37 +36,71 @@ public class CamelModelMapper {
                                 .build()
                 );
                 lastSource = target;
-            } else {
+            } else if (output instanceof ChoiceDefinition) {
                 ChoiceDefinition choiceDefinition = (ChoiceDefinition)output;
-                WhenDefinition whenDefinition = choiceDefinition.getWhenClauses().get(0);
-                OtherwiseDefinition otherwiseDefinition = choiceDefinition.getOtherwise();
-                List<ProcessorDefinition<?>> whenOutputs = whenDefinition.getOutputs();
-                List<ProcessorDefinition<?>> otherwiseOutputs = otherwiseDefinition.getOutputs();
-                ProcessorDefinition<?> otherwise = otherwiseOutputs.get(0);
-                Activity whenActivity = activity(((ToDefinition) whenOutputs.get(0)).getUri());
-                Activity otherwiseActivity = activity(((ToDefinition) otherwise).getUri());
-                Condition condition = condition()
-                        .withWhenTrue(whenActivity)
-                        .withWhenFalse(otherwiseActivity)
-                        .withExpression(whenDefinition.getExpression().getExpression())
-                        .build();
                 links.add(
                         link()
                                 .withSource(lastSource)
-                                .withTarget(condition)
+                                .withTarget(getCondition(links, choiceDefinition.getWhenClauses(), 0, choiceDefinition.getOtherwise()))
                                 .build()
                 );
-                if (whenOutputs.size() > 1) {
-                    links.addAll(processOtherOutputs(whenOutputs, whenActivity));
-                }
-                if (otherwiseOutputs.size() > 1) {
-                    links.addAll(processOtherOutputs(otherwiseOutputs, otherwiseActivity));
-                }
 
                 lastSource = null; //TODO assuming choice is always last node, is it possible that the assumption is wrong?
+            } else {
+                FilterDefinition filterDefinition = (FilterDefinition)output;
+                links.add(
+                        link()
+                        .withSource(lastSource)
+                        .withTarget(
+                                condition()
+                                        .withWhenTrue(activity(((ToDefinition) filterDefinition.getOutputs().get(0)).getUri()))
+                                        .withWhenFalse(activity("STOP"))
+                                        .withExpression(filterDefinition.getExpression().getExpression())
+                                        .build()
+                        ).build()
+                );
+                lastSource = null;
             }
         }
         return links;
+    }
+
+    private Condition getCondition(Set<Link> links, List<WhenDefinition> whens, int currentWhen, OtherwiseDefinition otherwiseDefinition) {
+        return currentWhen < whens.size() - 1 ? transientCondition(links, whens, currentWhen, otherwiseDefinition) : terminalCondition(links, whens.get(currentWhen), otherwiseDefinition);
+    }
+
+    private Condition transientCondition(Set<Link> links, List<WhenDefinition> whens, int current, OtherwiseDefinition otherwiseDefinition) {
+        WhenDefinition currentWhen = whens.get(current);
+        List<ProcessorDefinition<?>> whenTrueOutputs = currentWhen.getOutputs();
+        Activity whenTrueActivity = activity(((ToDefinition) whenTrueOutputs.get(0)).getUri());
+        if (whenTrueOutputs.size() > 1) {
+            links.addAll(processOtherOutputs(whenTrueOutputs, whenTrueActivity));
+        }
+        return condition()
+                .withWhenTrue(whenTrueActivity)
+                .withWhenFalse(getCondition(links, whens, current + 1, otherwiseDefinition))
+                .withExpression(currentWhen.getExpression().getExpression())
+                .build();
+    }
+
+    private Condition terminalCondition(Set<Link> links, WhenDefinition whenDefinition, OtherwiseDefinition otherwiseDefinition) {
+        List<ProcessorDefinition<?>> whenTrueOutputs = whenDefinition.getOutputs();
+        Activity whenTrueActivity = activity(((ToDefinition) whenTrueOutputs.get(0)).getUri());
+        if (whenTrueOutputs.size() > 1) {
+            links.addAll(processOtherOutputs(whenTrueOutputs, whenTrueActivity));
+        }
+
+        List<ProcessorDefinition<?>> whenFalseOutputs = otherwiseDefinition.getOutputs();
+        ProcessorDefinition<?> otherwise = whenFalseOutputs.get(0);
+        Activity whenFalseActivity = activity(((ToDefinition) otherwise).getUri());
+        if (whenFalseOutputs.size() > 1) {
+            links.addAll(processOtherOutputs(whenFalseOutputs, whenFalseActivity));
+        }
+        return condition()
+                .withWhenTrue(whenTrueActivity)
+                .withWhenFalse(whenFalseActivity)
+                .withExpression(whenDefinition.getExpression().getExpression())
+                .build();
     }
 
     private Set<Link> processOtherOutputs(List<ProcessorDefinition<?>> outputs, Activity source) {
