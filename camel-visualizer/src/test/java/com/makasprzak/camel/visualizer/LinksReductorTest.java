@@ -11,14 +11,14 @@ import static com.makasprzak.camel.visualizer.model.Activity.activity;
 import static java.util.Arrays.asList;
 import static org.fest.assertions.Assertions.assertThat;
 
-public class LinksReducerTest {
+public class LinksReductorTest {
 
-    private final LinksReducer linksReducer = new LinksReducer();
+    private final LinksReductor linksReductor = new LinksReductor();
 
     @Test
     public void shouldGroupTwoSerialLinksInOne() throws Exception {
         assertThat(
-                linksReducer.groupLinks(ImmutableSet.of(
+                linksReductor.groupLinks(ImmutableSet.of(
                         link("direct:a","direct:b"),
                         link("direct:b","direct:c")
                 ))
@@ -32,7 +32,7 @@ public class LinksReducerTest {
     @Test
     public void shouldGroupBranchToTwo() throws Exception {
         assertThat(
-                linksReducer.groupLinks(ImmutableSet.of(
+                linksReductor.groupLinks(ImmutableSet.of(
                         link("direct:a","direct:b"),
                         link("direct:b", "direct:c"),
                         link("direct:b", "direct:d")
