@@ -11,6 +11,7 @@ import java.util.Set;
 public class CamelVisualizer {
     private final ModelCamelContext camelContext;
     private final CamelModelMapper camelModelMapper = new CamelModelMapper();
+    private final LinksReducer linksReducer = new LinksReducer();
 
     public CamelVisualizer(ModelCamelContext camelContext) {
         this.camelContext = camelContext;
@@ -22,6 +23,7 @@ public class CamelVisualizer {
         for (RouteDefinition routeDefinition : routeDefinitions) {
             links.addAll(camelModelMapper.map(routeDefinition));
         }
+        List<List<Link>> groupedLinks = linksReducer.groupLinks(links);
 
 
         return null;
