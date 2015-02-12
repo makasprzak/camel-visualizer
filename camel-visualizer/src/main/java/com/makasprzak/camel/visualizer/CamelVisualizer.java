@@ -1,5 +1,6 @@
 package com.makasprzak.camel.visualizer;
 
+import com.makasprzak.camel.visualizer.model.DiagramElement;
 import com.makasprzak.camel.visualizer.model.Link;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteDefinition;
@@ -12,21 +13,26 @@ public class CamelVisualizer {
     private final ModelCamelContext camelContext;
     private final CamelModelMapper camelModelMapper = new CamelModelMapper();
     private final LinksReducer linksReducer = new LinksReducer();
+    private final LinksToNodesTransformer transformer = new LinksToNodesTransformer();
 
     public CamelVisualizer(ModelCamelContext camelContext) {
         this.camelContext = camelContext;
     }
 
     public String toPlantUML() {
-        List<RouteDefinition> routeDefinitions = camelContext.getRouteDefinitions();
+        List<List<DiagramElement>> tree = transformer.transformToElements(linksReducer.groupLinks(mapRoutes(camelContext.getRouteDefinitions())));
+
+
+
+        return null;
+    }
+
+    private Set<Link> mapRoutes(List<RouteDefinition> routeDefinitions) {
         Set<Link> links = new HashSet<Link>();
         for (RouteDefinition routeDefinition : routeDefinitions) {
             links.addAll(camelModelMapper.map(routeDefinition));
         }
-        List<List<Link>> groupedLinks = linksReducer.groupLinks(links);
-
-
-        return null;
+        return links;
     }
 
 
