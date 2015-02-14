@@ -1,6 +1,6 @@
 package com.makasprzak.camel.visualizer.example;
 
-import org.apache.camel.CamelContext;
+import com.makasprzak.camel.visualizer.exporter.FileCamelDiagramExporter;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.ModelCamelContext;
@@ -30,19 +30,20 @@ public class ExampleCamelApp extends RouteBuilder {
                     .to("direct:endC");
     }
 
-    public CamelContext buildContext() throws Exception {
-        CamelContext camelContext = new DefaultCamelContext();
+    public ModelCamelContext buildContext() throws Exception {
+        ModelCamelContext camelContext = new DefaultCamelContext();
         camelContext.addRoutes(this);
         camelContext.start();
         return camelContext;
     }
 
     public static void main(String[] args) throws Exception {
-        CamelContext camelContext = new ExampleCamelApp().buildContext();
-        ((ModelCamelContext)camelContext).getRouteDefinitions().forEach(route -> {
+        ModelCamelContext camelContext = new ExampleCamelApp().buildContext();
+        camelContext.getRouteDefinitions().forEach(route -> {
             LOG.info(route.toString());
             route.getInputs().forEach(in -> System.out.println("Input: "+in.getUri()));
             route.getOutputs().forEach(out -> System.out.println("Out: "+out.getClass()));
         });
+        FileCamelDiagramExporter.fileExporter(camelContext, System.getProperty("diagram.source.out","camel.plantuml"), System.getProperty("diagram.out","camel.png")).export();
     }
 }
