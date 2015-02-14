@@ -21,7 +21,7 @@ public class CamelModelMapper {
     public Set<Link> map(RouteDefinition routeDefinition) {
         Set<Link> links = new HashSet<Link>();
         for (FromDefinition fromDefinition : routeDefinition.getInputs()) {
-            Activity lastSource = activity(fromDefinition.getUri());
+            Activity lastSource = activity(fromDefinition.getUriOrRef().toString());
             List<ProcessorDefinition<?>> outputs = routeDefinition.getOutputs();
             links.addAll(processOutputs(lastSource, outputs));
         }
