@@ -32,7 +32,7 @@ public class CamelModelMapper {
         Set<Link> links = new HashSet<Link>();
         for (ProcessorDefinition<?> output : outputs) {
             if (output instanceof ToDefinition) {
-                Activity target = activity(((ToDefinition) output).getUri());
+                Activity target = activity(getLabel((ToDefinition) output));
                 links.add(
                         link()
                                 .withSource(lastSource)
@@ -57,7 +57,7 @@ public class CamelModelMapper {
                         .withSource(lastSource)
                         .withTarget(
                                 condition()
-                                        .withWhenTrue(activity(((ToDefinition) filterDefinition.getOutputs().get(0)).getUri()))
+                                        .withWhenTrue(activity(getLabel((ToDefinition) filterDefinition.getOutputs().get(0))))
                                         .withWhenFalse(activity("STOP"))
                                         .withExpression(filterDefinition.getExpression().getExpression())
                                         .build()
@@ -71,6 +71,10 @@ public class CamelModelMapper {
         return links;
     }
 
+    private String getLabel(ToDefinition output) {
+        return output.getUriOrRef();
+    }
+
     private Condition getCondition(Set<Link> links, List<WhenDefinition> whens, int currentWhen, OtherwiseDefinition otherwiseDefinition) {
         return currentWhen < whens.size() - 1 ? transientCondition(links, whens, currentWhen, otherwiseDefinition) : terminalCondition(links, whens.get(currentWhen), otherwiseDefinition);
     }
@@ -78,7 +82,7 @@ public class CamelModelMapper {
     private Condition transientCondition(Set<Link> links, List<WhenDefinition> whens, int current, OtherwiseDefinition otherwiseDefinition) {
         WhenDefinition currentWhen = whens.get(current);
         List<ProcessorDefinition<?>> whenTrueOutputs = currentWhen.getOutputs();
-        Activity whenTrueActivity = activity(((ToDefinition) whenTrueOutputs.get(0)).getUri());
+        Activity whenTrueActivity = activity(getLabel((ToDefinition) whenTrueOutputs.get(0)));
         if (whenTrueOutputs.size() > 1) {
             links.addAll(processOtherOutputs(whenTrueOutputs, whenTrueActivity));
         }
@@ -91,14 +95,14 @@ public class CamelModelMapper {
 
     private Condition terminalCondition(Set<Link> links, WhenDefinition whenDefinition, OtherwiseDefinition otherwiseDefinition) {
         List<ProcessorDefinition<?>> whenTrueOutputs = whenDefinition.getOutputs();
-        Activity whenTrueActivity = activity(((ToDefinition) whenTrueOutputs.get(0)).getUri());
+        Activity whenTrueActivity = activity(getLabel((ToDefinition) whenTrueOutputs.get(0)));
         if (whenTrueOutputs.size() > 1) {
             links.addAll(processOtherOutputs(whenTrueOutputs, whenTrueActivity));
         }
 
         List<ProcessorDefinition<?>> whenFalseOutputs = otherwiseDefinition.getOutputs();
         ProcessorDefinition<?> otherwise = whenFalseOutputs.get(0);
-        Activity whenFalseActivity = activity(((ToDefinition) otherwise).getUri());
+        Activity whenFalseActivity = activity(getLabel((ToDefinition) otherwise));
         if (whenFalseOutputs.size() > 1) {
             links.addAll(processOtherOutputs(whenFalseOutputs, whenFalseActivity));
         }
