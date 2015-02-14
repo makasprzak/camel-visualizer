@@ -8,6 +8,7 @@ public class ExampleContext extends RouteBuilder{
 
     @Override
     public void configure() throws Exception {
+        onException(RuntimeException.class).to("direct:error");
         from("direct:startA")
                 .to("direct:middle");
         from("direct:startB")

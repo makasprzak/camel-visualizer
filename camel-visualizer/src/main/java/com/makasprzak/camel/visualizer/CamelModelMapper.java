@@ -4,6 +4,8 @@ import com.makasprzak.camel.visualizer.model.Activity;
 import com.makasprzak.camel.visualizer.model.Condition;
 import com.makasprzak.camel.visualizer.model.Link;
 import org.apache.camel.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +16,8 @@ import static com.makasprzak.camel.visualizer.model.Condition.Builder.condition;
 import static com.makasprzak.camel.visualizer.model.Link.Builder.link;
 
 public class CamelModelMapper {
+    private final Logger LOG = LoggerFactory.getLogger(CamelModelMapper.class);
+
     public Set<Link> map(RouteDefinition routeDefinition) {
         Set<Link> links = new HashSet<Link>();
         for (FromDefinition fromDefinition : routeDefinition.getInputs()) {
@@ -46,7 +50,7 @@ public class CamelModelMapper {
                 );
 
                 lastSource = null; //TODO assuming choice is always last node, is it possible that the assumption is wrong?
-            } else {
+            } else if (output instanceof FilterDefinition) {
                 FilterDefinition filterDefinition = (FilterDefinition)output;
                 links.add(
                         link()
@@ -60,6 +64,8 @@ public class CamelModelMapper {
                         ).build()
                 );
                 lastSource = null;
+            } else {
+                LOG.warn("Unsupported node {} skipped",output);
             }
         }
         return links;
